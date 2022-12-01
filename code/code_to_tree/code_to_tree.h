@@ -18,6 +18,8 @@ ssize_t get_var_id(tree_node *node, var_info *vars, ssize_t *n_vars);
 
 void print_if(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars);
 
+void print_while(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars);
+
 //parser.cpp
 
 size_t get_file_size(FILE *stream);

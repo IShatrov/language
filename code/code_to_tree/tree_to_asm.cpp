@@ -72,6 +72,9 @@ void print_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
             case OP_IF:
                 print_if(code, node, vars, n_vars);
                 break;
+            case OP_WHILE:
+                print_while(code, node, vars, n_vars);
+                break;
             case OP_ADD:
                 DEFAULT_PRINT(add);
                 break;
@@ -178,7 +181,29 @@ void print_if(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
     ifs_printed++;
 
     return;
+}
 
+void print_while(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
+{
+    assert(code);
+    assert(node);
+    assert(vars);
+    assert(n_vars);
+
+    static int whiles_printed = 0;
+
+    PRINT("\nwhile%d:\n", whiles_printed);
+    TRY_PRINT(LEFT(node));//condition
+    PRINT("push 0\n"
+          "je while%dEnd\n\n", whiles_printed);
+
+    TRY_PRINT(RIGHT(node));
+    PRINT("jmp while%d\n"
+          "while%dEnd:\n\n", whiles_printed, whiles_printed);
+
+    whiles_printed++;
+
+    return;
 }
 
 #undef PRINT

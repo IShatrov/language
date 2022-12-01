@@ -362,6 +362,17 @@ tree_node* get_op(my_tree *tree, const char **str)
 
         LEFT(ans) = if_node;
     }
+    else if(OP_CMP(while))
+    {
+        *str += strlen("while");
+
+        NEW_OP_NODE(WHILE);
+
+        LEFT(new_node) = get_condition(tree, str);
+        RIGHT(new_node) = get_scope(tree, str);
+
+        LEFT(ans) = new_node;
+    }
     else
     {
         new_node = get_math(tree, str);

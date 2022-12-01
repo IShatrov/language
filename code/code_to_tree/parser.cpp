@@ -272,6 +272,7 @@ tree_node* get_scope(my_tree *tree, const char **str)
     tree_node *new_node;
     tree_node *ans = NEW_OP_NODE(GLUE);
 
+    assert(**str == '{');
 
     if(OP_CMP(var))
     {
@@ -306,7 +307,10 @@ tree_node* get_scope(my_tree *tree, const char **str)
 
     SKIP_SPACES((*str));
 
-    if(**str) RIGHT(ans) = get_scope(tree, str);
+    if(**str != '}') RIGHT(ans) = get_scope(tree, str);
+
+    SKIP_SPACES((*str));
+    assert(**str == '}');
 
     return ans;
 }

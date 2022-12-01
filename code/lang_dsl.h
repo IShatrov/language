@@ -28,15 +28,6 @@
     LEFT(node) = NULL;   \
     RIGHT(node) = NULL;  \
 
-#define PRINT(arg)                              \
-    if(arg->priority < node->priority)          \
-    {                                           \
-        TEX_PRINT("(");                         \
-        tex_print_math(tex, arg);               \
-        TEX_PRINT(")");                         \
-    }                                           \
-    else tex_print_math(tex, arg);
-
 #define FIND(node, var) tree_find(node, var)
 
 #define NEW_OP_NODE(name)              \

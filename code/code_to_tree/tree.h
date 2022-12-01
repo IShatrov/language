@@ -49,6 +49,7 @@ typedef struct
 {
     const char *name;
     ssize_t len;
+    ssize_t id;
 } var_info;
 
 typedef struct tree_node tree_node;

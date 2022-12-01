@@ -4,6 +4,18 @@
 #include "tree.h"
 #include "../lang_dsl.h"
 
+const int MAX_VARS = 100;
+
+//tree_to_asm.cpp
+
+void tree_to_asm(my_tree *tree);
+
+void print_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars);
+
+void try_print(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars);
+
+ssize_t get_var_id(tree_node *node, var_info *vars, ssize_t *n_vars);
+
 //parser.cpp
 
 size_t get_file_size(FILE *stream);
@@ -22,12 +34,12 @@ tree_node* get_turn(my_tree *tree, const char **str);
 
 tree_node* get_prim(my_tree *tree, const char **str);
 
-tree_node* get_pow(my_tree *tree, const char **str);
-
 tree_node* get_unary(my_tree *tree, const char **str);
 
 tree_node* get_arg(my_tree *tree, const char **str);
 
 tree_node* get_var(my_tree *tree, const char **str);
+
+tree_node* get_scope(my_tree *tree, const char **str);
 
 #endif

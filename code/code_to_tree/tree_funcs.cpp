@@ -96,8 +96,7 @@ void tree_dump(my_tree *tree)
                                                                                        \
 #define DEF_OP(name, text, ...)                                                        \
     case(OP_##name):                                                                   \
-        GR_VIZ_PRINT("\t" "\"%p\"[label = \"{%p | op: %s | {l: %p | r: %p} }\"];\n\n", \
-                node, node, #text, node->l_child, node->r_child);                       \
+        GR_VIZ_PRINT("\t" "\"%p\"[label = \"{op: %s}\"];\n\n", node, #text);           \
         break;
 
 void print_branch(tree_node *node, FILE *gr_viz)
@@ -123,13 +122,12 @@ void print_branch(tree_node *node, FILE *gr_viz)
     switch(node->type)
     {
         case NODE_NUM:
-            GR_VIZ_PRINT("\t" "\"%p\"[label = \"{%p | num: %.3lf | {l: %p | r: %p} }\"];\n\n",
-                node, node, node->val, node->l_child, node->r_child);
+            GR_VIZ_PRINT("\t" "\"%p\"[label = \"{num: %.3lf}\"];\n\n", node, node->val);
             break;
         case NODE_VAR:
-            GR_VIZ_PRINT("\t" "\"%p\"[label = \"{%p | var: ", node, node);
+            GR_VIZ_PRINT("\t" "\"%p\"[label = \"{var: ", node);
             fwrite((node->var).name, (node->var).len, 1, gr_viz);
-            GR_VIZ_PRINT(" | {l: %p | r: %p} }\"];\n\n", node->l_child, node->r_child);
+            GR_VIZ_PRINT("}\"];\n\n");
             break;
         case NODE_OP:
             switch(node->op)

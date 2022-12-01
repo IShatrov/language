@@ -4,37 +4,6 @@
 
 #define OP_CMP(op) (!strncmp(#op, *str, strlen(#op)))
 
-size_t get_file_size(FILE *stream)
-{
-    assert(stream != NULL);
-
-    size_t ans = 0;
-
-    assert(!fseek(stream, 0, SEEK_END));   //fseek returns zero upon success and non-zero otherwise
-    ans = ftell(stream);
-    assert(!ferror(stream));
-
-    assert(!fseek(stream, 0, SEEK_SET));
-
-    return ans;
-}
-
-char* read_text(FILE *stream)
-{
-    assert(stream != NULL);
-
-    size_t len = get_file_size(stream);
-    assert(len != 0);
-
-    char* text = (char*)calloc(len + 1, sizeof(char)); //+1 for null terminator
-    assert(text != NULL);
-
-    fread(text, sizeof(char), len, stream);
-    assert(!ferror(stream));
-
-    return text;
-}
-
 const char* parse_src_code(const char *filename, my_tree *tree)
 {
     assert(filename);
@@ -52,7 +21,7 @@ const char* parse_src_code(const char *filename, my_tree *tree)
 
     tree_ctor(tree, DEFAULT_TREE_CAP);
 
-    tree->root = get_math(tree, &str);
+    tree->root = get_scope(tree, &str);//this is where parsing starts
 
     SKIP_SPACES(str);
 
@@ -158,7 +127,7 @@ tree_node* get_expr(my_tree *tree, const char **str)
 
 tree_node* get_turn(my_tree* tree, const char **str)
 {
-    tree_node* ans = get_pow(tree, str);
+    tree_node* ans = get_prim(tree, str);
 
     SKIP_SPACES((*str));
 
@@ -220,32 +189,6 @@ tree_node* get_prim(my_tree *tree, const char **str)
     return ans;
 }
 
-tree_node* get_pow(my_tree *tree, const char **str)
-{
-    tree_node* ans = get_prim(tree, str);
-
-    SKIP_SPACES((*str));
-
-    tree_node* new_node;
-
-    if(**str == '^')
-    {
-        (*str)++;
-
-        tree_node *r_expr = get_prim(tree, str);
-
-        NEW_OP_NODE(POW);
-
-        LEFT(new_node) = ans;
-        RIGHT(new_node) = r_expr;
-        ans = new_node;
-    }
-
-    SKIP_SPACES((*str));
-
-    return ans;
-}
-
 tree_node* get_unary(my_tree *tree, const char **str)
 {
     tree_node* ans;
@@ -272,17 +215,6 @@ tree_node* get_unary(my_tree *tree, const char **str)
         tree_node* arg = get_arg(tree, str);
 
         NEW_OP_NODE(COS);
-        ans = new_node;
-
-        RIGHT(ans) = arg;
-    }
-    else if(OP_CMP(ln))
-    {
-        *str += strlen("ln");
-
-        tree_node* arg = get_arg(tree, str);
-
-        NEW_OP_NODE(LN);
         ans = new_node;
 
         RIGHT(ans) = arg;
@@ -331,6 +263,83 @@ tree_node* get_var(my_tree *tree, const char **str)
     SKIP_SPACES((*str));
 
     return new_node;
+}
+
+tree_node* get_scope(my_tree *tree, const char **str)
+{
+    SKIP_SPACES((*str));
+
+    tree_node *new_node;
+    tree_node *ans = NEW_OP_NODE(GLUE);
+
+
+    if(OP_CMP(var))
+    {
+        *str += strlen("var");
+
+        NEW_OP_NODE(VAR_DECL);
+
+        RIGHT(new_node) = get_var(tree, str);
+    }
+    else if(OP_CMP(read))
+    {
+        *str += strlen("read");
+
+        NEW_OP_NODE(READ);
+
+        RIGHT(new_node) = get_var(tree, str);
+    }
+    else if(OP_CMP(write))
+    {
+        *str += strlen("write");
+
+        NEW_OP_NODE(WRITE);
+
+        RIGHT(new_node) = get_var(tree, str);
+    }
+    else
+    {
+        new_node = get_math(tree, str);
+    }
+
+    LEFT(ans) = new_node;
+
+    SKIP_SPACES((*str));
+
+    if(**str) RIGHT(ans) = get_scope(tree, str);
+
+    return ans;
+}
+
+size_t get_file_size(FILE *stream)
+{
+    assert(stream != NULL);
+
+    size_t ans = 0;
+
+    assert(!fseek(stream, 0, SEEK_END));   //fseek returns zero upon success and non-zero otherwise
+    ans = ftell(stream);
+    assert(!ferror(stream));
+
+    assert(!fseek(stream, 0, SEEK_SET));
+
+    return ans;
+}
+
+char* read_text(FILE *stream)
+{
+    assert(stream != NULL);
+
+    size_t len = get_file_size(stream);
+    assert(len != 0);
+
+    char* text = (char*)calloc(len + 1, sizeof(char)); //+1 for null terminator
+    assert(text != NULL);
+
+    fread(text, sizeof(char), len, stream);
+    assert(!ferror(stream));
+
+    return text;
 }
 
 #undef SKIP_SPACES

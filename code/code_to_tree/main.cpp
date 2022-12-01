@@ -8,7 +8,7 @@ int main(int argc, const char *argv[])
     my_tree tree;
     const char *src_code = parse_src_code(src_filename, &tree);
 
-    tree_dump(&tree);
+    //tree_dump(&tree);
 
     tree_to_asm(&tree);
 

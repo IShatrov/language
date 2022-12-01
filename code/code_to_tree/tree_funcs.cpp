@@ -87,7 +87,9 @@ void tree_dump(my_tree *tree)
 
     fclose(gr_viz);
 
+    //printf("%d\n", (tree->root)->op);
     system("dot.exe -T png -o dump_pic.png graphviz_code.txt");
+    //printf("%d\n", (tree->root)->op);
     system("dump_pic.png");
 
     return;

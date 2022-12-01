@@ -1,6 +1,7 @@
 #include "code_to_tree.h"
 
 #define PRINT(...) fprintf(code, __VA_ARGS__)
+
 #define TRY_PRINT(node) try_print(code, node, vars, n_vars)
 
 #define DEFAULT_PRINT(text)                     \
@@ -17,6 +18,9 @@ void tree_to_asm(my_tree *tree)
 
     var_info *vars = (var_info*)calloc(MAX_VARS, sizeof(var_info));
     ssize_t n_vars = 0;
+
+    //tree_dump(tree);
+    //printf("%d\n", OP(tree->root));
 
     print_asm(code, tree->root, vars, &n_vars);
     PRINT("halt\n");
@@ -53,7 +57,9 @@ void print_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
             case OP_ASSIGN:
                 TRY_PRINT(LEFT(node));
                 var_id = get_var_id(RIGHT(node), vars, n_vars);
-                PRINT("pop [%lld]\n", var_id);
+                PRINT("pop [%lld];", var_id);
+                fwrite(vars[var_id].name, vars[var_id].len, 1,code);
+                putc('\n', code);
                 break;
             case OP_GLUE:
                 TRY_PRINT(LEFT(node));
@@ -62,11 +68,15 @@ void print_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
             case OP_READ:
                 PRINT("in\n");
                 var_id = get_var_id(RIGHT(node), vars, n_vars);
-                PRINT("pop [%lld]\n", var_id);
+                PRINT("pop [%lld];", var_id);
+                fwrite(vars[var_id].name, vars[var_id].len, 1,code);
+                putc('\n', code);
                 break;
             case OP_WRITE:
                 var_id = get_var_id(RIGHT(node), vars, n_vars);
-                PRINT("push [%lld]\n", var_id);
+                PRINT("push [%lld];", var_id);
+                fwrite(vars[var_id].name, vars[var_id].len, 1,code);
+                putc('\n', code);
                 PRINT("out\n");
                 break;
             case OP_IF:
@@ -105,7 +115,9 @@ void print_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
     {
         var_id = get_var_id(node, vars, n_vars);
 
-        PRINT("push [%lld]\n", var_id);
+        PRINT("push [%lld];", var_id);
+        fwrite(vars[var_id].name, vars[var_id].len, 1,code);
+        putc('\n', code);
     }
 
     return;

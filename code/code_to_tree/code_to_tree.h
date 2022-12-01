@@ -16,6 +16,8 @@ void try_print(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars);
 
 ssize_t get_var_id(tree_node *node, var_info *vars, ssize_t *n_vars);
 
+//void print_if(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars);
+
 //parser.cpp
 
 size_t get_file_size(FILE *stream);
@@ -41,5 +43,9 @@ tree_node* get_arg(my_tree *tree, const char **str);
 tree_node* get_var(my_tree *tree, const char **str);
 
 tree_node* get_scope(my_tree *tree, const char **str);
+
+tree_node* get_condition(my_tree *tree, const char **str);
+
+tree_node* get_op(my_tree *tree, const char **str);
 
 #endif

@@ -269,10 +269,43 @@ tree_node* get_scope(my_tree *tree, const char **str)
 {
     SKIP_SPACES((*str));
 
+    assert(**str == '{');
+    (*str)++;
+    SKIP_SPACES((*str));
+
+    tree_node *ans = get_op(tree, str);
+
+    SKIP_SPACES((*str));
+    assert(**str == '}');
+    (*str)++;
+    SKIP_SPACES((*str));
+
+    return ans;
+}
+
+tree_node* get_condition(my_tree *tree, const char **str)
+{
+    SKIP_SPACES((*str));
+
+    assert(**str == '(');
+    (*str)++;
+
+    tree_node *ans = get_expr(tree, str);
+
+    SKIP_SPACES((*str));
+
+    assert(**str == ')');
+    (*str)++;
+
+    return ans;
+}
+
+tree_node* get_op(my_tree *tree, const char **str)
+{
+    SKIP_SPACES((*str));
+
     tree_node *new_node;
     tree_node *ans = NEW_OP_NODE(GLUE);
-
-    assert(**str == '{');
 
     if(OP_CMP(var))
     {
@@ -298,6 +331,15 @@ tree_node* get_scope(my_tree *tree, const char **str)
 
         RIGHT(new_node) = get_var(tree, str);
     }
+//    else if(OP_CMP(if))
+//    {
+//        *str += strlen("if");
+//
+//        NEW_OP_NODE(WRITE);
+//
+//        LEFT(new_node) = get_condition(tree, str);
+//        RIGHT(new_node) = get_scope(tree, str);
+//    }
     else
     {
         new_node = get_math(tree, str);
@@ -307,10 +349,9 @@ tree_node* get_scope(my_tree *tree, const char **str)
 
     SKIP_SPACES((*str));
 
-    if(**str != '}') RIGHT(ans) = get_scope(tree, str);
+    if(**str != '}') RIGHT(ans) = get_op(tree, str);
 
     SKIP_SPACES((*str));
-    assert(**str == '}');
 
     return ans;
 }

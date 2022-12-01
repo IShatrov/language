@@ -2,6 +2,8 @@
 
 #define ERR_MISSING_OPEN_BRACKET printf("ERROR: missing (\n")
 
+#define ERR_MISSING_OPEN_CURLY_BRACKET printf("ERROR: missing {\n")
+
 #define ERR_OP_TEXT printf("ERROR: operator %5s not found\n", *text)
 
 #define ERR_N_OP(num) printf("ERROR: unknown operator %d\n", num)

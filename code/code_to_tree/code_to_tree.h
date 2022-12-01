@@ -16,7 +16,7 @@ void try_print(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars);
 
 ssize_t get_var_id(tree_node *node, var_info *vars, ssize_t *n_vars);
 
-//void print_if(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars);
+void print_if(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars);
 
 //parser.cpp
 

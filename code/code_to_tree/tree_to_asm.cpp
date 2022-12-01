@@ -69,14 +69,17 @@ void print_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
                 PRINT("push [%lld]\n", var_id);
                 PRINT("out\n");
                 break;
+            case OP_IF:
+                print_if(code, node, vars, n_vars);
+                break;
             case OP_ADD:
                 DEFAULT_PRINT(add);
                 break;
             case OP_SUB:
                 DEFAULT_PRINT(sub);
                 break;
-            case OP_MULT:
-                DEFAULT_PRINT(mult);
+            case OP_MUL:
+                DEFAULT_PRINT(mul);
                 break;
             case OP_DIV:
                 DEFAULT_PRINT(div);
@@ -120,6 +123,7 @@ ssize_t get_var_id(tree_node *node, var_info *vars, ssize_t *n_vars)
 {
     assert(node);
     assert(vars);
+    assert(n_vars);
 
     for(int vars_checked = 0; vars_checked < *n_vars; vars_checked++)
     {
@@ -130,6 +134,32 @@ ssize_t get_var_id(tree_node *node, var_info *vars, ssize_t *n_vars)
     }
 
     return -1;
+}
+
+void print_if(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
+{
+    assert(code);
+    assert(node);
+    assert(vars);
+    assert(n_vars);
+
+    static int ifs_printed = 0;
+
+    PRINT("\n");
+
+    TRY_PRINT(LEFT(node));//condition
+
+    PRINT("push 0\n"
+          "je if%dEnd\n\n"
+          "if%d:\n", ifs_printed, ifs_printed);
+
+    TRY_PRINT(RIGHT(node));
+    PRINT("if%dEnd:\n\n", ifs_printed);
+
+    ifs_printed++;
+
+    return;
+
 }
 
 #undef PRINT

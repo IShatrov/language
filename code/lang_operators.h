@@ -6,13 +6,15 @@ DEF_OP(READ, read)
 
 DEF_OP(WRITE, write)
 
+DEF_OP(IF, if)
+
 DEF_OP(ASSIGN, =) //graphviz cant print ->
 
 DEF_OP(ADD, +)
 
 DEF_OP(SUB, -)
 
-DEF_OP(MULT, *)
+DEF_OP(MUL, *)
 
 DEF_OP(DIV, /)
 

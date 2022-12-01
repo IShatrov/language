@@ -142,7 +142,7 @@ tree_node* get_turn(my_tree* tree, const char **str)
 
         if(op == '*')
         {
-            NEW_OP_NODE(MULT);
+            NEW_OP_NODE(MUL);
 
             LEFT(new_node) = ans;
             RIGHT(new_node) = r_expr;
@@ -331,15 +331,15 @@ tree_node* get_op(my_tree *tree, const char **str)
 
         RIGHT(new_node) = get_var(tree, str);
     }
-//    else if(OP_CMP(if))
-//    {
-//        *str += strlen("if");
-//
-//        NEW_OP_NODE(WRITE);
-//
-//        LEFT(new_node) = get_condition(tree, str);
-//        RIGHT(new_node) = get_scope(tree, str);
-//    }
+    else if(OP_CMP(if))
+    {
+        *str += strlen("if");
+
+        NEW_OP_NODE(IF);
+
+        LEFT(new_node) = get_condition(tree, str);
+        RIGHT(new_node) = get_scope(tree, str);
+    }
     else
     {
         new_node = get_math(tree, str);

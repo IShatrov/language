@@ -314,6 +314,8 @@ tree_node* get_op(my_tree *tree, const char **str)
         NEW_OP_NODE(VAR_DECL);
 
         RIGHT(new_node) = get_var(tree, str);
+
+        LEFT(ans) = new_node;
     }
     else if(OP_CMP(read))
     {
@@ -322,6 +324,8 @@ tree_node* get_op(my_tree *tree, const char **str)
         NEW_OP_NODE(READ);
 
         RIGHT(new_node) = get_var(tree, str);
+
+        LEFT(ans) = new_node;
     }
     else if(OP_CMP(write))
     {
@@ -330,22 +334,39 @@ tree_node* get_op(my_tree *tree, const char **str)
         NEW_OP_NODE(WRITE);
 
         RIGHT(new_node) = get_var(tree, str);
+
+        LEFT(ans) = new_node;
     }
     else if(OP_CMP(if))
     {
         *str += strlen("if");
 
         NEW_OP_NODE(IF);
+        tree_node *if_node = new_node;
 
-        LEFT(new_node) = get_condition(tree, str);
-        RIGHT(new_node) = get_scope(tree, str);
+        LEFT(if_node) = get_condition(tree, str);
+        //RIGHT(new_node) = get_scope(tree, str);
+
+        tree_node *if_code = get_scope(tree, str);
+
+        if(OP_CMP(else))
+        {
+            *str += strlen("else");
+
+            NEW_OP_NODE(ELSE);
+            RIGHT(if_node) = new_node;
+            RIGHT(new_node) = if_code;
+            LEFT(new_node) = get_scope(tree, str);
+        }
+        else RIGHT(if_node) = if_code;
+
+        LEFT(ans) = if_node;
     }
     else
     {
         new_node = get_math(tree, str);
+        LEFT(ans) = new_node;
     }
-
-    LEFT(ans) = new_node;
 
     SKIP_SPACES((*str));
 

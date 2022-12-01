@@ -8,6 +8,8 @@ DEF_OP(WRITE, write)
 
 DEF_OP(IF, if)
 
+DEF_OP(ELSE, else)
+
 DEF_OP(ASSIGN, =) //graphviz cant print ->
 
 DEF_OP(ADD, +)

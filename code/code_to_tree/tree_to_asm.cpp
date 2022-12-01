@@ -143,18 +143,37 @@ void print_if(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
     assert(vars);
     assert(n_vars);
 
-    static int ifs_printed = 0;
+    static int ifs_printed = 0, elses_printed = 0;
 
     PRINT("\n");
 
     TRY_PRINT(LEFT(node));//condition
 
-    PRINT("push 0\n"
-          "je if%dEnd\n\n"
-          "if%d:\n", ifs_printed, ifs_printed);
+    if(OP(RIGHT(node)) == OP_ELSE)
+    {
+        PRINT("push 0\n"
+              "je else%d\n\n"
+              "if%d:\n", elses_printed, ifs_printed);
 
-    TRY_PRINT(RIGHT(node));
-    PRINT("if%dEnd:\n\n", ifs_printed);
+        TRY_PRINT(RIGHT(RIGHT(node)));  //executed if condition is true
+        PRINT("jmp if%dEnd\n", ifs_printed);
+
+        PRINT("else%d:\n", elses_printed);
+        TRY_PRINT(LEFT(RIGHT(node)));
+
+        PRINT("if%dEnd:\n\n", ifs_printed);
+
+        elses_printed++;
+    }
+    else
+    {
+        PRINT("push 0\n"
+              "je if%dEnd\n\n"
+              "if%d:\n", ifs_printed, ifs_printed);
+
+        TRY_PRINT(RIGHT(node));
+        PRINT("if%dEnd:\n\n", ifs_printed);
+    }
 
     ifs_printed++;
 

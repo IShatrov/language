@@ -6,6 +6,7 @@
 
 const int MAX_VARS = 100;
 
+
 //tree_to_asm.cpp
 
 void tree_to_asm(my_tree *tree);
@@ -21,6 +22,10 @@ void print_if(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars);
 void print_while(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars);
 
 //parser.cpp
+
+lexic_cell* lexic(const char *filename, char **text);
+
+void lexic_dump(const lexic_cell *array, size_t size);
 
 size_t get_file_size(FILE *stream);
 

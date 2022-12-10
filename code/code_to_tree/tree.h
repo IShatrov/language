@@ -10,6 +10,8 @@
 
 #include "../err_msgs.h"
 
+#define DEFAULT_ARR_SIZE 100
+
 const char TREE_BYPASS = 1;
 
 const int DEFAULT_TREE_CAP = 20;
@@ -78,6 +80,35 @@ typedef struct
 
     tree_node *data;
 } my_tree;
+
+enum cell_types //for lexic array
+{
+    CELL_NUM,
+    CELL_OP,
+    CELL_BRACKET,
+    CELL_NAME,
+};
+
+enum bracket_types
+{
+    OPEN_ROUND,
+    CLOSE_ROUND,
+    OPEN_CURLY,
+    CLOSE_CURLY,
+};
+
+typedef struct
+{
+    char type;
+
+    union
+    {
+        double val;
+        enum operators op;
+        var_info var_or_func;  //var or func name
+        enum bracket_types bracket;
+    };
+} lexic_cell;
 
 
 //

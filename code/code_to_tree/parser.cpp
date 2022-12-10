@@ -4,6 +4,111 @@
 
 #define OP_CMP(op) (!strncmp(#op, *str, strlen(#op)))
 
+#define STORE_BRACKET(bracket_type)                 \
+    ans[tokens_found].type = CELL_BRACKET;          \
+    ans[tokens_found].bracket = bracket_type;       \
+    str++;
+
+#define DEF_OP(name, text, ...)                  \
+    else if(!strncmp(#text, str, strlen(#text))) \
+    {                                            \
+        str += strlen(#text);                    \
+                                                 \
+        ans[tokens_found].type = CELL_OP;        \
+        ans[tokens_found].op = OP_##name;        \
+    }
+
+#define GR_VIZ_PRINT(...) fprintf(gr_viz, __VA_ARGS__)
+
+lexic_cell* lexic(const char *filename, char **text)
+{
+    assert(filename);
+    assert(text);
+
+    FILE *src_code = fopen(filename, "r");
+    assert(src_code);
+
+    *text = read_text(src_code);
+    fclose(src_code);
+
+    const char *str = *text;
+
+    SKIP_SPACES(str);
+
+    lexic_cell *ans = (lexic_cell*)calloc(DEFAULT_ARR_SIZE, sizeof(lexic_cell));
+
+    size_t tokens_found = 0, current_size = DEFAULT_ARR_SIZE;
+
+    while(*str)
+    {
+        //printf("%s\n\n\n\n", str);
+        if(tokens_found == current_size)
+        {
+            current_size *= 2;
+            ans = (lexic_cell*)realloc(ans, current_size*sizeof(lexic_cell));
+            assert(ans);
+        }
+
+        char *end = NULL;
+
+        double val = strtod(str, &end);
+
+        if(str != end)
+        {
+            str = end;
+
+            ans[tokens_found].type = CELL_NUM;
+            ans[tokens_found].val = val;
+
+            SKIP_SPACES(str);
+            tokens_found++;
+
+            continue;
+        }
+
+        if(0);    //for else if in macro
+            #include "../lang_operators.h"
+        else if(*str == '(')
+        {
+            STORE_BRACKET(OPEN_ROUND);
+        }
+        else if(*str == ')')
+        {
+            STORE_BRACKET(CLOSE_ROUND);
+        }
+        else if(*str == '{')
+        {
+            STORE_BRACKET(OPEN_CURLY);
+        }
+        else if(*str == '}')
+        {
+            STORE_BRACKET(CLOSE_CURLY);
+        }
+        else
+        {
+            ans[tokens_found].type = CELL_NAME;
+            ans[tokens_found].var_or_func.name = str;
+
+            ssize_t len = 0;
+            while(isalnum(*str))
+            {
+                str++;
+                len++;
+            }
+
+            ans[tokens_found].var_or_func.len = len;
+        }
+
+        SKIP_SPACES(str);
+        tokens_found++;
+    }
+
+    lexic_dump(ans, tokens_found);
+
+    return ans;
+}
+#undef DEF_OP
+
 const char* parse_src_code(const char *filename, my_tree *tree)
 {
     assert(filename);
@@ -419,5 +524,78 @@ char* read_text(FILE *stream)
     return text;
 }
 
+#define DEF_OP(name, text, ...)                                                                 \
+    case(OP_##name):                                                                            \
+        GR_VIZ_PRINT("\t" "\"%p\"[label = \"{op: %s}\"];\n\n", &(array[cells_printed]), #text); \
+        break;
+void lexic_dump(const lexic_cell *array, size_t size)
+{
+    assert(array);
+
+    FILE *gr_viz = fopen("lexic_dump.txt", "w");
+    assert(gr_viz);
+
+    GR_VIZ_PRINT("digraph dump\n{\n"
+                 "\trankdir = LR;"
+                 "\tnode[shape = \"record\", style = \"rounded\"];\n\n");
+
+    for(size_t cells_printed = 0; cells_printed < size; cells_printed++)
+    {
+        if(cells_printed < size - 1)
+        GR_VIZ_PRINT("\t" "\"%p\"->\"%p\";\n", &(array[cells_printed]), &(array[cells_printed + 1]));
+
+        switch(array[cells_printed].type)
+        {
+            case CELL_BRACKET:
+                switch(array[cells_printed].bracket)
+                {
+                    case OPEN_ROUND:
+                        GR_VIZ_PRINT("\t" "\"%p\"[label = \"{%c}\"];\n\n", &(array[cells_printed]), '(');
+                        break;
+                    case CLOSE_ROUND:
+                        GR_VIZ_PRINT("\t" "\"%p\"[label = \"{%c}\"];\n\n", &(array[cells_printed]), ')');
+                        break;
+                    case OPEN_CURLY:
+                        GR_VIZ_PRINT("\t" "\"%p\"[label = \"{%s}\"];\n\n",
+                            &(array[cells_printed]), "open curly");
+                        break;
+                    case CLOSE_CURLY:
+                        GR_VIZ_PRINT("\t" "\"%p\"[label = \"{%s}\"];\n\n",
+                            &(array[cells_printed]), "close curly");
+                        break;
+                }
+                break;
+            case CELL_NUM:
+                GR_VIZ_PRINT("\t" "\"%p\"[label = \"{%.3lf}\"];\n\n",
+                    &(array[cells_printed]), array[cells_printed].val);
+                break;
+            case CELL_NAME:
+                GR_VIZ_PRINT("\t" "\"%p\"[label = \"{var: ", &(array[cells_printed]));
+                fwrite(array[cells_printed].var_or_func.name, array[cells_printed].var_or_func.len,
+                    1, gr_viz);
+                GR_VIZ_PRINT("}\"];\n\n");
+                break;
+            case CELL_OP:
+                switch(array[cells_printed].op)
+                {
+                    #include "../lang_operators.h"
+                }
+
+        }
+    }
+
+    putc('}', gr_viz);
+
+    fclose(gr_viz);
+
+    system("dot.exe -T png -o lexic_dump.png lexic_dump.txt");
+    system("lexic_dump.png");
+
+    return;
+}
+#undef DEF_OP
+
 #undef SKIP_SPACES
 #undef OP_CMP
+#undef WRITE_OP
+#undef GR_VIZ_PRINT

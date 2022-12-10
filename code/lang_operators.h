@@ -12,7 +12,7 @@ DEF_OP(ELSE, else)
 
 DEF_OP(WHILE, while)
 
-DEF_OP(ASSIGN, =) //graphviz cant print ->
+DEF_OP(ASSIGN, @)
 
 DEF_OP(ADD, +)
 

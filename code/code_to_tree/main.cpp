@@ -5,18 +5,19 @@ int main(int argc, const char *argv[])
     const char *src_filename = "src_code.txt";
     if(argc > 1) src_filename = argv[1];
 
-    char *text = NULL;
-    lexic(src_filename, &text);
+    char *src_code = NULL;
+    lexic_cell *tokens = lexic_analysis(src_filename, &src_code);
 
-    //my_tree tree;
-    //const char *src_code = parse_src_code(src_filename, &tree);
+    my_tree tree;
+    parse_src_code(&tree, tokens);
 
     //tree_dump(&tree);
 
-    //tree_to_asm(&tree);
+    tree_to_asm(&tree);
 
-    //free((void*)src_code);
-    //tree_dtor(&tree);
+    free(src_code);
+    free(tokens);
+    tree_dtor(&tree);
 
     return 0;
 }

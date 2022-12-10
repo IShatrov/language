@@ -2,8 +2,6 @@
 
 #define SKIP_SPACES(text) while(isspace(*text)) text++
 
-#define OP_CMP(op) (!strncmp(#op, *str, strlen(#op)))
-
 #define STORE_BRACKET(bracket_type)                 \
     ans[tokens_found].type = CELL_BRACKET;          \
     ans[tokens_found].bracket = bracket_type;       \
@@ -20,7 +18,11 @@
 
 #define GR_VIZ_PRINT(...) fprintf(gr_viz, __VA_ARGS__)
 
-lexic_cell* lexic(const char *filename, char **text)
+#define CHECK_OP(op_num) ((**lexic).type == CELL_OP && (**lexic).op == op_num)
+
+#define CHECK_BRACKET(bracket_type) ((**lexic).type == CELL_BRACKET && (**lexic).bracket == bracket_type)
+
+lexic_cell* lexic_analysis(const char *filename, char **text)
 {
     assert(filename);
     assert(text);
@@ -41,7 +43,6 @@ lexic_cell* lexic(const char *filename, char **text)
 
     while(*str)
     {
-        //printf("%s\n\n\n\n", str);
         if(tokens_found == current_size)
         {
             current_size *= 2;
@@ -103,57 +104,38 @@ lexic_cell* lexic(const char *filename, char **text)
         tokens_found++;
     }
 
-    lexic_dump(ans, tokens_found);
+   // lexic_dump(ans, tokens_found);
 
     return ans;
 }
 #undef DEF_OP
 
-const char* parse_src_code(const char *filename, my_tree *tree)
+void parse_src_code(my_tree *tree, lexic_cell *lexic)
 {
-    assert(filename);
     assert(tree);
-
-    FILE *src_code = fopen(filename, "r");
-    assert(src_code);
-
-    const char *text_ptr = read_text(src_code);
-    fclose(src_code);
-
-    const char *str = text_ptr;
-
-    SKIP_SPACES(str);
+    assert(lexic);
 
     tree_ctor(tree, DEFAULT_TREE_CAP);
 
-    tree->root = get_scope(tree, &str);//this is where parsing starts
+    tree->root = get_scope(tree, &lexic);//this is where parsing starts
 
-    SKIP_SPACES(str);
-
-    assert(*str == '\0');
-
-    return text_ptr;
+    return;
 }
 
-tree_node* get_math(my_tree *tree, const char **str)
+tree_node* get_math(my_tree *tree, lexic_cell **lexic)
 {
-    SKIP_SPACES((*str));
+    tree_node *expr = get_expr(tree, lexic);
 
-    tree_node *expr = get_expr(tree, str);
-
-    SKIP_SPACES((*str));
-
-    if(OP_CMP(->))
+    if(CHECK_OP(OP_ASSIGN))
     {
-        *str += strlen("->");
-        SKIP_SPACES((*str));
+        (*lexic)++;
 
         tree_node *new_node;
         NEW_OP_NODE(ASSIGN);
 
         tree_node *ans = new_node;
 
-        RIGHT(ans) = get_var(tree, str);
+        RIGHT(ans) = get_var(tree, lexic);
         LEFT(ans) = expr;
 
         return ans;
@@ -164,50 +146,40 @@ tree_node* get_math(my_tree *tree, const char **str)
     }
 }
 
-tree_node* get_num(my_tree *tree, const char **str)
+tree_node* get_num(my_tree *tree, lexic_cell **lexic)
 {
-    SKIP_SPACES((*str));
-
-    const char *s_old = *str;
-    char *end = NULL;
-
-    double val = strtod(*str, &end);
-    *str = end;
-
-    if(*str != s_old)
+    if((**lexic).type == CELL_NUM)
     {
         tree_node *new_node;
-        NEW_NUM_NODE(val);
+        NEW_NUM_NODE((**lexic).val);
 
-        SKIP_SPACES((*str));
+        (*lexic)++;
 
         return new_node;
     }
     else
     {
-        return get_var(tree, str);
+        return get_var(tree, lexic);
     }
 
     ERR_UNDEFINED;
     return NULL;
 }
 
-tree_node* get_expr(my_tree *tree, const char **str)
+tree_node* get_expr(my_tree *tree, lexic_cell **lexic)
 {
-    tree_node* ans = get_turn(tree, str);
-
-    SKIP_SPACES((*str));
+    tree_node* ans = get_turn(tree, lexic);
 
     tree_node* new_node;
 
-    if(**str == '+' || (**str == '-' && *(*str + 1) != '>'))
+    if(CHECK_OP(OP_ADD) || CHECK_OP(OP_SUB))
     {
-        char op = **str;
-        (*str)++;
+        char op = (**lexic).op;
+        (*lexic)++;
 
-        tree_node *r_expr = get_expr(tree, str);
+        tree_node *r_expr = get_expr(tree, lexic);
 
-        if(op == '+')
+        if(op == OP_ADD)
         {
             NEW_OP_NODE(ADD);
 
@@ -225,27 +197,23 @@ tree_node* get_expr(my_tree *tree, const char **str)
         }
     }
 
-    SKIP_SPACES((*str));
-
     return ans;
 }
 
-tree_node* get_turn(my_tree* tree, const char **str)
+tree_node* get_turn(my_tree* tree, lexic_cell **lexic)
 {
-    tree_node* ans = get_prim(tree, str);
-
-    SKIP_SPACES((*str));
+    tree_node* ans = get_prim(tree, lexic);
 
     tree_node* new_node;
 
-    if(**str == '*' || **str == '/')
+    if(CHECK_OP(OP_MUL) || CHECK_OP(OP_DIV))
     {
-        char op = **str;
-        (*str)++;
+        char op = (**lexic).op;
+        (*lexic)++;
 
-        tree_node *r_expr = get_turn(tree, str);
+        tree_node *r_expr = get_turn(tree, lexic);
 
-        if(op == '*')
+        if(op == OP_MUL)
         {
             NEW_OP_NODE(MUL);
 
@@ -263,232 +231,198 @@ tree_node* get_turn(my_tree* tree, const char **str)
         }
     }
 
-    SKIP_SPACES((*str));
-
     return ans;
 }
 
-tree_node* get_prim(my_tree *tree, const char **str)
+tree_node* get_prim(my_tree *tree, lexic_cell **lexic)
 {
     tree_node *ans;
 
-    SKIP_SPACES((*str));
 
-    if(**str == '(')
+    if(CHECK_BRACKET(OPEN_ROUND))
     {
-        (*str)++;
+        (*lexic)++;
 
-        ans = get_expr(tree, str);
+        ans = get_expr(tree, lexic);
 
-        if(**str != ')')
+        if(!CHECK_BRACKET(CLOSE_ROUND))
         {
             ERR_MISSING_CLOSE_BRACKET;
             return NULL;
         }
-        (*str)++;
+        (*lexic)++;
     }
-    else ans = get_unary(tree, str);
-
-    SKIP_SPACES((*str));
+    else ans = get_unary(tree, lexic);
 
     return ans;
 }
 
-tree_node* get_unary(my_tree *tree, const char **str)
+tree_node* get_unary(my_tree *tree, lexic_cell **lexic)
 {
     tree_node* ans;
 
-    SKIP_SPACES((*str));
-
     tree_node *new_node;
 
-    if(OP_CMP(sin))
+    if(CHECK_OP(OP_SIN))
     {
-        *str += strlen("sin");
+        (*lexic)++;
 
-        tree_node* arg = get_arg(tree, str);
+        tree_node* arg = get_arg(tree, lexic);
 
         NEW_OP_NODE(SIN);
         ans = new_node;
 
         RIGHT(ans) = arg;
     }
-    else if(OP_CMP(cos))
+    else if(CHECK_OP(OP_COS))
     {
-        *str += strlen("cos");
+        (*lexic)++;
 
-        tree_node* arg = get_arg(tree, str);
+        tree_node* arg = get_arg(tree, lexic);
 
         NEW_OP_NODE(COS);
         ans = new_node;
 
         RIGHT(ans) = arg;
     }
-    else ans = get_num(tree, str);
-
-    SKIP_SPACES((*str));
+    else ans = get_num(tree, lexic);
 
     return ans;
 }
 
-tree_node* get_arg(my_tree *tree, const char **str)
+tree_node* get_arg(my_tree *tree, lexic_cell **lexic)
 {
-    SKIP_SPACES((*str));
 
-    assert(**str == '(');
-    (*str)++;
+    assert(CHECK_BRACKET(OPEN_ROUND));
+    (*lexic)++;
 
-    tree_node* ans = get_expr(tree, str);
+    tree_node* ans = get_expr(tree, lexic);
 
-    assert(**str == ')');
-    (*str)++;
-
-    SKIP_SPACES((*str));
+    assert(CHECK_BRACKET(CLOSE_ROUND));
+    (*lexic)++;
 
     return ans;
 }
 
-tree_node* get_var(my_tree *tree, const char **str)
+tree_node* get_var(my_tree *tree, lexic_cell **lexic)
 {
-    SKIP_SPACES((*str));
-
     tree_node *new_node;
     NEW_NODE;
     new_node->type = NODE_VAR;
-    (new_node->var).name = *str;
+    (new_node->var).name = (**lexic).var_or_func.name;
+    (new_node->var).len = (**lexic).var_or_func.len;
 
-    ssize_t len = 0;
-    while(isalnum(**str))
-    {
-        (*str)++;
-        len++;
-    }
-    (new_node->var).len = len;
-
-    SKIP_SPACES((*str));
+    (*lexic)++;
 
     return new_node;
 }
 
-tree_node* get_scope(my_tree *tree, const char **str)
+tree_node* get_scope(my_tree *tree, lexic_cell **lexic)
 {
-    SKIP_SPACES((*str));
+    assert(CHECK_BRACKET(OPEN_CURLY));
+    (*lexic)++;
 
-    assert(**str == '{');
-    (*str)++;
-    SKIP_SPACES((*str));
+    tree_node *ans = get_op(tree, lexic);
 
-    tree_node *ans = get_op(tree, str);
+    //lexic_dump(*lexic, 10);
 
-    SKIP_SPACES((*str));
-    assert(**str == '}');
-    (*str)++;
-    SKIP_SPACES((*str));
+    assert(CHECK_BRACKET(CLOSE_CURLY));
+    (*lexic)++;
 
     return ans;
 }
 
-tree_node* get_condition(my_tree *tree, const char **str)
+tree_node* get_condition(my_tree *tree, lexic_cell **lexic)
 {
-    SKIP_SPACES((*str));
+    assert(CHECK_BRACKET(OPEN_ROUND));
+    (*lexic)++;
 
-    assert(**str == '(');
-    (*str)++;
+    tree_node *ans = get_expr(tree, lexic);
 
-    tree_node *ans = get_expr(tree, str);
-
-    SKIP_SPACES((*str));
-
-    assert(**str == ')');
-    (*str)++;
+    assert(CHECK_BRACKET(CLOSE_ROUND));
+    (*lexic)++;
 
     return ans;
 }
 
-tree_node* get_op(my_tree *tree, const char **str)
+tree_node* get_op(my_tree *tree, lexic_cell **lexic)
 {
-    SKIP_SPACES((*str));
-
     tree_node *new_node;
     tree_node *ans = NEW_OP_NODE(GLUE);
 
-    if(OP_CMP(var))
+    if(CHECK_OP(OP_VAR_DECL))
     {
-        *str += strlen("var");
+        (*lexic)++;
 
         NEW_OP_NODE(VAR_DECL);
 
-        RIGHT(new_node) = get_var(tree, str);
+        RIGHT(new_node) = get_var(tree, lexic);
 
         LEFT(ans) = new_node;
     }
-    else if(OP_CMP(read))
+    else if(CHECK_OP(OP_READ))
     {
-        *str += strlen("read");
+        (*lexic)++;
 
         NEW_OP_NODE(READ);
 
-        RIGHT(new_node) = get_var(tree, str);
+        RIGHT(new_node) = get_var(tree, lexic);
 
         LEFT(ans) = new_node;
     }
-    else if(OP_CMP(write))
+    else if(CHECK_OP(OP_WRITE))
     {
-        *str += strlen("write");
+        (*lexic)++;
 
         NEW_OP_NODE(WRITE);
 
-        RIGHT(new_node) = get_var(tree, str);
+        RIGHT(new_node) = get_var(tree, lexic);
 
         LEFT(ans) = new_node;
     }
-    else if(OP_CMP(if))
+    else if(CHECK_OP(OP_IF))
     {
-        *str += strlen("if");
+        (*lexic)++;
 
         NEW_OP_NODE(IF);
         tree_node *if_node = new_node;
 
-        LEFT(if_node) = get_condition(tree, str);
-        //RIGHT(new_node) = get_scope(tree, str);
+        LEFT(if_node) = get_condition(tree, lexic);
 
-        tree_node *if_code = get_scope(tree, str);
+        tree_node *if_code = get_scope(tree, lexic);
 
-        if(OP_CMP(else))
+        if(CHECK_OP(OP_ELSE))
         {
-            *str += strlen("else");
+            (*lexic)++;
 
             NEW_OP_NODE(ELSE);
             RIGHT(if_node) = new_node;
             RIGHT(new_node) = if_code;
-            LEFT(new_node) = get_scope(tree, str);
+            LEFT(new_node) = get_scope(tree, lexic);
         }
         else RIGHT(if_node) = if_code;
 
         LEFT(ans) = if_node;
     }
-    else if(OP_CMP(while))
+    else if(CHECK_OP(OP_WHILE))
     {
-        *str += strlen("while");
+        (*lexic)++;
 
         NEW_OP_NODE(WHILE);
 
-        LEFT(new_node) = get_condition(tree, str);
-        RIGHT(new_node) = get_scope(tree, str);
+        LEFT(new_node) = get_condition(tree, lexic);
+        RIGHT(new_node) = get_scope(tree, lexic);
 
         LEFT(ans) = new_node;
     }
     else
     {
-        new_node = get_math(tree, str);
+        new_node = get_math(tree, lexic);
         LEFT(ans) = new_node;
     }
 
-    SKIP_SPACES((*str));
-
-    if(**str != '}') RIGHT(ans) = get_op(tree, str);
-
-    SKIP_SPACES((*str));
+    if((**lexic).type != CELL_BRACKET || (**lexic).bracket != CLOSE_CURLY)
+        RIGHT(ans) = get_op(tree, lexic);
 
     return ans;
 }

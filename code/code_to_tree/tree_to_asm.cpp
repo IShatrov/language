@@ -16,21 +16,15 @@ void tree_to_asm(my_tree *tree)
     FILE *code = fopen("code.txt", "w");
     assert(code);
 
-    //var_info *vars = (var_info*)calloc(MAX_VARS, sizeof(var_info));
-    //ssize_t n_vars = 0;
-
     PRINT("push 0\n"
           "push 0\n"
           "pop rax\n"
           "call main\n"
           "halt\n");
 
-    //print_asm(code, tree->root, vars, &n_vars);
-
     print_prog(code, tree->root);
 
     fclose(code);
-    //free(vars);
 
     return;
 }
@@ -158,6 +152,10 @@ void print_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
                       "mul\n"
                       "sqr\n");
                 break;
+            case OP_SQRT:
+                TRY_PRINT(RIGHT(node));
+                PRINT("sqr\n");
+                break;
             case OP_CALL:
                 PRINT("push %lld\n", *n_vars);
 
@@ -172,8 +170,6 @@ void print_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
                 }
 
                 PRINT("push %lld\n", *n_vars);
-                //PRINT("push rax\n");
-                //PRINT("add\n");
 
                 PRINT("push rax\n"
                       "add \n"
@@ -229,7 +225,7 @@ ssize_t get_var_id(tree_node *node, var_info *vars, ssize_t *n_vars)
 
     for(int vars_checked = 0; vars_checked < *n_vars; vars_checked++)
     {
-        int len = (node->var.len);
+        ssize_t len = (node->var.len);
 
         if(len < vars[vars_checked].len) len = vars[vars_checked].len;
 

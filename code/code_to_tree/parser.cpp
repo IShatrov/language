@@ -85,6 +85,14 @@ lexic_cell* lexic_analysis(const char *filename, char **text)
         {
             STORE_BRACKET(CLOSE_CURLY);
         }
+        else if(*str == '[')
+        {
+            STORE_BRACKET(OPEN_SQUARE);
+        }
+        else if(*str == ']')
+        {
+            STORE_BRACKET(CLOSE_SQUARE);
+        }
         else
         {
             ans[tokens_found].type = CELL_NAME;
@@ -139,12 +147,12 @@ tree_node* get_func(my_tree *tree, lexic_cell **lexic)
 
     LEFT(ans) = new_node;
 
-    assert(CHECK_BRACKET(OPEN_ROUND));
+    assert(CHECK_BRACKET(OPEN_SQUARE));
     (*lexic)++;
 
     LEFT(LEFT(ans)) = get_func_args(tree, lexic);
 
-    assert(CHECK_BRACKET(CLOSE_ROUND));
+    assert(CHECK_BRACKET(CLOSE_SQUARE));
     (*lexic)++;
 
     RIGHT(LEFT(ans)) = get_scope(tree, lexic);
@@ -156,7 +164,7 @@ tree_node* get_func(my_tree *tree, lexic_cell **lexic)
 
 tree_node* get_func_args(my_tree *tree, lexic_cell **lexic)
 {
-    if(CHECK_BRACKET(CLOSE_ROUND)) return NULL;
+    if(CHECK_BRACKET(CLOSE_SQUARE)) return NULL;
 
     tree_node *new_node;
 
@@ -344,6 +352,17 @@ tree_node* get_unary(my_tree *tree, lexic_cell **lexic)
 
         RIGHT(ans) = arg;
     }
+    else if(CHECK_OP(OP_SQRT))
+    {
+        (*lexic)++;
+
+        tree_node* arg = get_arg(tree, lexic);
+
+        NEW_OP_NODE(SQRT);
+        ans = new_node;
+
+        RIGHT(ans) = arg;
+    }
     else ans = get_num(tree, lexic);
 
     return ans;
@@ -373,7 +392,7 @@ tree_node* get_var(my_tree *tree, lexic_cell **lexic)
 
     (*lexic)++;
 
-    if(CHECK_BRACKET(OPEN_ROUND))
+    if(CHECK_BRACKET(OPEN_SQUARE))
     {
         (*lexic)++;
 
@@ -385,7 +404,7 @@ tree_node* get_var(my_tree *tree, lexic_cell **lexic)
 
         RIGHT(new_node) = get_func_args(tree, lexic);
 
-        assert(CHECK_BRACKET(CLOSE_ROUND));
+        assert(CHECK_BRACKET(CLOSE_SQUARE));
         (*lexic)++;
     }
 
@@ -398,8 +417,6 @@ tree_node* get_scope(my_tree *tree, lexic_cell **lexic)
     (*lexic)++;
 
     tree_node *ans = get_op(tree, lexic);
-
-    //lexic_dump(*lexic, 10);
 
     assert(CHECK_BRACKET(CLOSE_CURLY));
     (*lexic)++;

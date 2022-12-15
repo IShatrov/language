@@ -32,4 +32,6 @@ DEF_OP(COS, cos)
 
 DEF_OP(ABS, abs)
 
+DEF_OP(SQRT, sqrt)
+
 DEF_OP(CALL, call)

@@ -14,7 +14,7 @@
 
 const char TREE_BYPASS = 1;
 
-const int DEFAULT_TREE_CAP = 20;
+const int DEFAULT_TREE_CAP = 300;
 
 enum poison
 {
@@ -95,6 +95,8 @@ enum bracket_types
     CLOSE_ROUND,
     OPEN_CURLY,
     CLOSE_CURLY,
+    OPEN_SQUARE,
+    CLOSE_SQUARE,
 };
 
 typedef struct

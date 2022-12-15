@@ -1,0 +1,25 @@
+main()
+{
+	var a
+	read a
+	
+	factorial(a|) @ a
+	
+	write a
+	
+	return 0
+}
+
+factorial(arg|)
+{
+	var a
+	
+	if(arg)
+	{
+		arg - 1 @ a
+		
+		return arg * factorial(a|)
+	}
+	
+	return 1
+}

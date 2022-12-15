@@ -6,10 +6,11 @@
 
 const int MAX_VARS = 100;
 
-
 //tree_to_asm.cpp
 
 void tree_to_asm(my_tree *tree);
+
+void print_prog(FILE *code, tree_node *node);
 
 void print_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars);
 

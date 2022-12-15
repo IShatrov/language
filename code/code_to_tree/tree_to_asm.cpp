@@ -16,14 +16,54 @@ void tree_to_asm(my_tree *tree)
     FILE *code = fopen("code.txt", "w");
     assert(code);
 
+    //var_info *vars = (var_info*)calloc(MAX_VARS, sizeof(var_info));
+    //ssize_t n_vars = 0;
+
+    PRINT("push 0\n"
+          "push 0\n"
+          "pop rax\n"
+          "call main\n"
+          "halt\n");
+
+    //print_asm(code, tree->root, vars, &n_vars);
+
+    print_prog(code, tree->root);
+
+    fclose(code);
+    //free(vars);
+
+    return;
+}
+
+void print_prog(FILE *code, tree_node *node)
+{
+    assert(code);
+    assert(node);
+
+    tree_node *func = LEFT(node);
+
     var_info *vars = (var_info*)calloc(MAX_VARS, sizeof(var_info));
     ssize_t n_vars = 0;
 
-    print_asm(code, tree->root, vars, &n_vars);
-    PRINT("halt\n");
+    PRINT("\n");
+    fwrite(func->var.name, func->var.len, 1, code);
+    PRINT(":\n");
 
-    fclose(code);
-    free(vars);
+    tree_node *var = LEFT(func);
+
+    while(var)
+    {
+        vars[n_vars].name = var->var.name;
+        vars[n_vars].len = var->var.len;
+        vars[n_vars].id = n_vars;
+        n_vars++;
+
+        var = RIGHT(var);
+    }
+
+    print_asm(code, RIGHT(func), vars, &n_vars);
+
+    if(RIGHT(node)) print_prog(code, RIGHT(node));
 
     return;
 }
@@ -36,6 +76,8 @@ void print_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
     assert(n_vars);
 
     ssize_t var_id = 0;
+    int args_passed = 0, args_found = 0;
+    tree_node *arg = NULL;
 
     if(TYPE(node) == NODE_OP)
     {
@@ -54,8 +96,8 @@ void print_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
             case OP_ASSIGN:
                 TRY_PRINT(LEFT(node));
                 var_id = get_var_id(RIGHT(node), vars, n_vars);
-                PRINT("pop [%lld];", var_id);
-                fwrite(vars[var_id].name, vars[var_id].len, 1,code);
+                PRINT("pop [rax + %lld];", var_id);
+                fwrite(vars[var_id].name, vars[var_id].len, 1, code);
                 putc('\n', code);
                 break;
             case OP_GLUE:
@@ -65,14 +107,14 @@ void print_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
             case OP_READ:
                 PRINT("in\n");
                 var_id = get_var_id(RIGHT(node), vars, n_vars);
-                PRINT("pop [%lld];", var_id);
-                fwrite(vars[var_id].name, vars[var_id].len, 1,code);
+                PRINT("pop [rax + %lld];", var_id);
+                fwrite(vars[var_id].name, vars[var_id].len, 1, code);
                 putc('\n', code);
                 break;
             case OP_WRITE:
                 var_id = get_var_id(RIGHT(node), vars, n_vars);
-                PRINT("push [%lld];", var_id);
-                fwrite(vars[var_id].name, vars[var_id].len, 1,code);
+                PRINT("push [rax + %lld];", var_id);
+                fwrite(vars[var_id].name, vars[var_id].len, 1, code);
                 putc('\n', code);
                 PRINT("out\n");
                 break;
@@ -81,6 +123,16 @@ void print_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
                 break;
             case OP_WHILE:
                 print_while(code, node, vars, n_vars);
+                break;
+            case OP_RETURN:
+                TRY_PRINT(RIGHT(node));
+                PRINT("pop rbx\n"
+                      "push rax\n"
+                      "sub\n"
+                      "push -1\n"
+                      "mul\n"
+                      "pop rax\n"
+                      "ret\n");
                 break;
             case OP_ADD:
                 DEFAULT_PRINT(add);
@@ -100,6 +152,38 @@ void print_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
             case OP_COS:
                 DEFAULT_PRINT(cos);
                 break;
+            case OP_CALL:
+                PRINT("push %lld\n", *n_vars);
+
+                args_found = 0;
+                arg = RIGHT(node);
+                while(arg)
+                {
+                    var_id = get_var_id(arg, vars, n_vars);
+                    PRINT("push [rax + %lld]\n", var_id);
+                    args_found++;
+                    arg = RIGHT(arg);
+                }
+
+                PRINT("push %lld\n", *n_vars);
+                //PRINT("push rax\n");
+                //PRINT("add\n");
+
+                PRINT("push rax\n"
+                      "add \n"
+                      "pop rax\n");
+
+                for(args_passed = 0; args_passed < args_found; args_passed++)
+                {
+                    PRINT("pop [rax + %d]\n", args_found - args_passed - 1);
+                }
+
+                PRINT("call ");
+                fwrite(LEFT(node)->var.name, LEFT(node)->var.len, 1, code);
+                PRINT("\n"
+                      "push rbx\n");
+
+                break;
             default:
                 ERR_N_OP(OP(node));
         }
@@ -112,7 +196,7 @@ void print_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
     {
         var_id = get_var_id(node, vars, n_vars);
 
-        PRINT("push [%lld];", var_id);
+        PRINT("push [rax + %lld];", var_id);
         fwrite(vars[var_id].name, vars[var_id].len, 1,code);
         putc('\n', code);
     }

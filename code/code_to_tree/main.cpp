@@ -11,9 +11,9 @@ int main(int argc, const char *argv[])
     my_tree tree;
     parse_src_code(&tree, tokens);
 
-    tree_dump(&tree);
+    //tree_dump(&tree);
 
-    //tree_to_asm(&tree);
+    tree_to_asm(&tree);
 
     free(src_code);
     free(tokens);

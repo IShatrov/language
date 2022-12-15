@@ -1,16 +1,16 @@
-main()
+main[]
 {
 	var a
 	read a
 	
-	factorial(a|) @ a
+	factorial[a|] @ a
 	
 	write a
 	
 	return 0
 }
 
-factorial(arg|)
+factorial[arg|]
 {
 	var a
 	
@@ -18,7 +18,7 @@ factorial(arg|)
 	{
 		arg - 1 @ a
 		
-		return arg * factorial(a|)
+		return arg * factorial[a|]
 	}
 	
 	return 1

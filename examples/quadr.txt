@@ -1,0 +1,97 @@
+main[]
+{
+	var a
+	var b
+	var c
+
+	read a
+	read b
+	read c
+
+	solveSq[a|b|c|]
+	
+	return 0
+}
+
+solveSq[a|b|c|]
+{
+	if(a)
+	{
+		var d
+		b*b - 4*a*c @ d
+		
+		if(abs(d) + d)
+		{
+			if(d)
+			{
+				var sqrD
+				
+				sqrt(d) @ sqrD
+				
+				var x1
+				var x2
+				
+				0 - b + sqrD @ x1
+				x1 / 2*a @ x1
+				0 - b - sqrD @ x2
+				x2 / (2*a) @ x2
+				
+				
+				write x1
+				write x2
+				
+				return 0
+			}
+			
+			var x
+			
+			-1*b/(2*a) @ x
+			
+			write x
+			
+			return 0
+		}
+	}
+	else
+	{
+		solveLin[b|c|]
+		return 0
+	}
+}
+
+
+
+solveLin[a|b|]
+{
+	if(a)
+	{
+		var x
+		
+		-1*b/a @ x
+		
+		write x
+		
+		return 0
+	}
+	
+	if(b)
+	{
+		var noRoots
+		0 @ noRoots
+		
+		write noRoots
+		write noRoots
+		write noRoots
+		
+		return 0
+	}
+	
+	var infRoots
+	1 @ infRoots
+	
+	write infRoots
+	write infRoots
+	write infRoots
+	
+	return 0
+}

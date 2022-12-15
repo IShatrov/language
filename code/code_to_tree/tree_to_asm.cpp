@@ -152,6 +152,12 @@ void print_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
             case OP_COS:
                 DEFAULT_PRINT(cos);
                 break;
+            case OP_ABS:
+                TRY_PRINT(RIGHT(node));
+                PRINT("dup\n"
+                      "mul\n"
+                      "sqr\n");
+                break;
             case OP_CALL:
                 PRINT("push %lld\n", *n_vars);
 

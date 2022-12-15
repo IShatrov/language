@@ -30,4 +30,6 @@ DEF_OP(SIN, sin)
 
 DEF_OP(COS, cos)
 
+DEF_OP(ABS, abs)
+
 DEF_OP(CALL, call)

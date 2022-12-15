@@ -333,6 +333,17 @@ tree_node* get_unary(my_tree *tree, lexic_cell **lexic)
 
         RIGHT(ans) = arg;
     }
+    else if(CHECK_OP(OP_ABS))
+    {
+        (*lexic)++;
+
+        tree_node* arg = get_arg(tree, lexic);
+
+        NEW_OP_NODE(ABS);
+        ans = new_node;
+
+        RIGHT(ans) = arg;
+    }
     else ans = get_num(tree, lexic);
 
     return ans;

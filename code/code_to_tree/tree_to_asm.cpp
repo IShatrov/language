@@ -223,7 +223,11 @@ ssize_t get_var_id(tree_node *node, var_info *vars, ssize_t *n_vars)
 
     for(int vars_checked = 0; vars_checked < *n_vars; vars_checked++)
     {
-        if(!strncmp(vars[vars_checked].name, (node->var).name, (node->var).len))
+        int len = (node->var.len);
+
+        if(len < vars[vars_checked].len) len = vars[vars_checked].len;
+
+        if(!strncmp(vars[vars_checked].name, (node->var).name, len))
         {
             return vars_checked;
         }

@@ -33,6 +33,10 @@ char* read_text(FILE *stream);
 
 void parse_src_code(my_tree *tree, lexic_cell *lexic);
 
+tree_node* get_func(my_tree *tree, lexic_cell **lexic);
+
+tree_node* get_func_args(my_tree *tree, lexic_cell **lexic);
+
 tree_node* get_math(my_tree *tree, lexic_cell **lexic);
 
 tree_node* get_num(my_tree *tree, lexic_cell **lexic);

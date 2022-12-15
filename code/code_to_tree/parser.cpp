@@ -104,7 +104,7 @@ lexic_cell* lexic_analysis(const char *filename, char **text)
         tokens_found++;
     }
 
-   // lexic_dump(ans, tokens_found);
+    //lexic_dump(ans, tokens_found);
 
     return ans;
 }
@@ -117,9 +117,57 @@ void parse_src_code(my_tree *tree, lexic_cell *lexic)
 
     tree_ctor(tree, DEFAULT_TREE_CAP);
 
-    tree->root = get_scope(tree, &lexic);//this is where parsing starts
+    tree->root = get_func(tree, &lexic);
 
     return;
+}
+
+tree_node* get_func(my_tree *tree, lexic_cell **lexic)
+{
+    if((**lexic).type != CELL_NAME) return NULL;
+
+    tree_node *new_node;
+
+    tree_node *ans = NEW_OP_NODE(GLUE);
+
+    NEW_NODE;
+    new_node->type = NODE_VAR;
+    (new_node->var).name = (**lexic).var_or_func.name;
+    (new_node->var).len = (**lexic).var_or_func.len;
+
+    (*lexic)++;
+
+    LEFT(ans) = new_node;
+
+    assert(CHECK_BRACKET(OPEN_ROUND));
+    (*lexic)++;
+
+    LEFT(LEFT(ans)) = get_func_args(tree, lexic);
+
+    assert(CHECK_BRACKET(CLOSE_ROUND));
+    (*lexic)++;
+
+    RIGHT(LEFT(ans)) = get_scope(tree, lexic);
+
+    RIGHT(ans) = get_func(tree, lexic);
+
+    return ans;
+}
+
+tree_node* get_func_args(my_tree *tree, lexic_cell **lexic)
+{
+    if(CHECK_BRACKET(CLOSE_ROUND)) return NULL;
+
+    tree_node *new_node;
+
+    new_node = get_math(tree, lexic);
+
+    assert(CHECK_OP(OP_ARG_SEP));
+    (*lexic)++;
+
+    RIGHT(new_node) = get_func_args(tree, lexic);
+
+    return new_node;
 }
 
 tree_node* get_math(my_tree *tree, lexic_cell **lexic)
@@ -314,6 +362,22 @@ tree_node* get_var(my_tree *tree, lexic_cell **lexic)
 
     (*lexic)++;
 
+    if(CHECK_BRACKET(OPEN_ROUND))
+    {
+        (*lexic)++;
+
+        tree_node *func_name = new_node;
+
+        NEW_OP_NODE(CALL);
+
+        LEFT(new_node) = func_name;
+
+        RIGHT(new_node) = get_func_args(tree, lexic);
+
+        assert(CHECK_BRACKET(CLOSE_ROUND));
+        (*lexic)++;
+    }
+
     return new_node;
 }
 
@@ -377,6 +441,16 @@ tree_node* get_op(my_tree *tree, lexic_cell **lexic)
         NEW_OP_NODE(WRITE);
 
         RIGHT(new_node) = get_var(tree, lexic);
+
+        LEFT(ans) = new_node;
+    }
+    else if(CHECK_OP(OP_RETURN))
+    {
+        (*lexic)++;
+
+        NEW_OP_NODE(RETURN);
+
+        RIGHT(new_node) = get_math(tree, lexic);
 
         LEFT(ans) = new_node;
     }

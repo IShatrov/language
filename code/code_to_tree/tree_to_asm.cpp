@@ -19,9 +19,6 @@ void tree_to_asm(my_tree *tree)
     var_info *vars = (var_info*)calloc(MAX_VARS, sizeof(var_info));
     ssize_t n_vars = 0;
 
-    //tree_dump(tree);
-    //printf("%d\n", OP(tree->root));
-
     print_asm(code, tree->root, vars, &n_vars);
     PRINT("halt\n");
 

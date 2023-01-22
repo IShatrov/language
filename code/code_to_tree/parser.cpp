@@ -2,9 +2,9 @@
 
 #define SKIP_SPACES(text) while(isspace(*text)) text++
 
-#define STORE_BRACKET(bracket_type)                 \
-    ans[tokens_found].type = CELL_BRACKET;          \
-    ans[tokens_found].bracket = bracket_type;       \
+#define STORE_BRACKET(br_type)                 \
+    ans[tokens_found].type = CELL_BRACKET;     \
+    ans[tokens_found].bracket = br_type;       \
     str++;
 
 #define DEF_OP(name, text, ...)                  \
@@ -45,7 +45,7 @@ lexic_cell* lexic_analysis(const char *filename, char **text)
     {
         if(tokens_found == current_size)
         {
-            current_size *= 2;
+            current_size *= ARRAY_SIZE_MULTIPLIER;
             ans = (lexic_cell*)realloc(ans, current_size*sizeof(lexic_cell));
             assert(ans);
         }
@@ -69,43 +69,27 @@ lexic_cell* lexic_analysis(const char *filename, char **text)
 
         if(0);    //for else if in macro
             #include "../lang_operators.h"
-        else if(*str == '(')
-        {
-            STORE_BRACKET(OPEN_ROUND);
-        }
-        else if(*str == ')')
-        {
-            STORE_BRACKET(CLOSE_ROUND);
-        }
-        else if(*str == '{')
-        {
-            STORE_BRACKET(OPEN_CURLY);
-        }
-        else if(*str == '}')
-        {
-            STORE_BRACKET(CLOSE_CURLY);
-        }
-        else if(*str == '[')
-        {
-            STORE_BRACKET(OPEN_SQUARE);
-        }
-        else if(*str == ']')
-        {
-            STORE_BRACKET(CLOSE_SQUARE);
-        }
         else
         {
-            ans[tokens_found].type = CELL_NAME;
-            ans[tokens_found].var_or_func.name = str;
-
-            ssize_t len = 0;
-            while(isalnum(*str))
+            int bracket_type = 0;
+            if((bracket_type = detect_bracket(str)))
             {
-                str++;
-                len++;
+                STORE_BRACKET(bracket_type);
             }
+            else
+            {
+                ans[tokens_found].type = CELL_NAME;
+                ans[tokens_found].var_or_func.name = str;
 
-            ans[tokens_found].var_or_func.len = len;
+                ssize_t len = 0;
+                while(isalnum(*str))
+                {
+                    str++;
+                    len++;
+                }
+
+                ans[tokens_found].var_or_func.len = len;
+            }
         }
 
         SKIP_SPACES(str);
@@ -117,6 +101,31 @@ lexic_cell* lexic_analysis(const char *filename, char **text)
     return ans;
 }
 #undef DEF_OP
+
+int detect_bracket(const char *str)
+{
+    assert(str);
+
+    switch(*str)
+    {
+        case '(':
+            return OPEN_ROUND;
+        case ')':
+            return CLOSE_ROUND;
+        case '{':
+            return OPEN_CURLY;
+        case '}':
+            return CLOSE_CURLY;
+        case '[':
+            return OPEN_SQUARE;
+        case ']':
+            return CLOSE_SQUARE;
+        default:
+            return 0;
+    }
+
+    return 0;
+}
 
 void parse_src_code(my_tree *tree, lexic_cell *lexic)
 {

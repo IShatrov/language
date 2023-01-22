@@ -10,7 +10,7 @@
 
 #include "../err_msgs.h"
 
-#define DEFAULT_ARR_SIZE 100
+#define DEFAULT_ARR_SIZE 200
 
 const char TREE_BYPASS = 1;
 
@@ -91,7 +91,7 @@ enum cell_types //for lexic array
 
 enum bracket_types
 {
-    OPEN_ROUND,
+    OPEN_ROUND = 1,//to make enumeration start from 1, required by detect_bracket function
     CLOSE_ROUND,
     OPEN_CURLY,
     CLOSE_CURLY,
@@ -108,7 +108,7 @@ typedef struct
         double val;
         enum operators op;
         var_info var_or_func;  //var or func name
-        enum bracket_types bracket;
+        int bracket;
     };
 } lexic_cell;
 

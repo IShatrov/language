@@ -12,7 +12,7 @@ const int ARRAY_SIZE_MULTIPLIER = 2;
 
 void tree_to_asm(my_tree *tree);
 
-void print_prog(FILE *code, tree_node *node);
+void func_to_asm(FILE *code, tree_node *node);
 
 void print_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars);
 
@@ -20,9 +20,11 @@ void try_print(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars);
 
 ssize_t get_var_id(tree_node *node, var_info *vars, ssize_t *n_vars);
 
-void print_if(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars);
+void if_to_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars);
 
-void print_while(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars);
+void while_to_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars);
+
+void call_to_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars);
 
 //parser.cpp
 

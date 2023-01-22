@@ -70,8 +70,6 @@ void print_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
     assert(n_vars);
 
     ssize_t var_id = 0;
-    int args_passed = 0, args_found = 0;
-    tree_node *arg = NULL;
 
     if(TYPE(node) == NODE_OP)
     {
@@ -157,34 +155,7 @@ void print_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
                 PRINT("sqr\n");
                 break;
             case OP_CALL:
-                PRINT("push %lld\n", *n_vars);
-
-                args_found = 0;
-                arg = RIGHT(node);
-                while(arg)
-                {
-                    var_id = get_var_id(arg, vars, n_vars);
-                    PRINT("push [rax + %lld]\n", var_id);
-                    args_found++;
-                    arg = RIGHT(arg);
-                }
-
-                PRINT("push %lld\n", *n_vars);
-
-                PRINT("push rax\n"
-                      "add \n"
-                      "pop rax\n");
-
-                for(args_passed = 0; args_passed < args_found; args_passed++)
-                {
-                    PRINT("pop [rax + %d]\n", args_found - args_passed - 1);
-                }
-
-                PRINT("call ");
-                fwrite(LEFT(node)->var.name, LEFT(node)->var.len, 1, code);
-                PRINT("\n"
-                      "push rbx\n");
-
+                call_to_asm(code, node, vars, n_vars);
                 break;
             default:
                 ERR_N_OP(OP(node));
@@ -301,6 +272,45 @@ void while_to_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
           "while%dEnd:\n\n", whiles_printed, whiles_printed);
 
     whiles_printed++;
+
+    return;
+}
+
+void call_to_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
+{
+    assert(code);
+    assert(node);
+    assert(vars);
+    assert(n_vars);
+
+    int args_passed = 0, args_found = 0;
+
+    PRINT("push %lld\n", *n_vars);
+
+    tree_node *arg = RIGHT(node);
+    while(arg)
+    {
+        ssize_t var_id = get_var_id(arg, vars, n_vars);
+        PRINT("push [rax + %lld]\n", var_id);
+        args_found++;
+        arg = RIGHT(arg);
+    }
+
+    PRINT("push %lld\n", *n_vars);
+
+    PRINT("push rax\n"
+          "add \n"
+          "pop rax\n");
+
+    for(args_passed = 0; args_passed < args_found; args_passed++)
+    {
+        PRINT("pop [rax + %d]\n", args_found - args_passed - 1);
+    }
+
+    PRINT("call ");
+    fwrite(LEFT(node)->var.name, LEFT(node)->var.len, 1, code);
+    PRINT("\n"
+          "push rbx\n");
 
     return;
 }

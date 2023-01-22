@@ -22,6 +22,11 @@
 
 #define CHECK_BRACKET(bracket_type) ((**lexic).type == CELL_BRACKET && (**lexic).bracket == bracket_type)
 
+#define RECURS_ASSERT      \
+    assert(tree);          \
+    assert(lexic);         \
+    assert(*lexic);        \
+
 lexic_cell* lexic_analysis(const char *filename, char **text)
 {
     assert(filename);
@@ -141,6 +146,8 @@ void parse_src_code(my_tree *tree, lexic_cell *lexic)
 
 tree_node* get_func(my_tree *tree, lexic_cell **lexic)
 {
+    RECURS_ASSERT;
+
     if((**lexic).type != CELL_NAME) return NULL;
 
     tree_node *new_node;
@@ -173,6 +180,8 @@ tree_node* get_func(my_tree *tree, lexic_cell **lexic)
 
 tree_node* get_func_args(my_tree *tree, lexic_cell **lexic)
 {
+    RECURS_ASSERT;
+
     if(CHECK_BRACKET(CLOSE_SQUARE)) return NULL;
 
     tree_node *new_node;
@@ -189,6 +198,8 @@ tree_node* get_func_args(my_tree *tree, lexic_cell **lexic)
 
 tree_node* get_math(my_tree *tree, lexic_cell **lexic)
 {
+    RECURS_ASSERT;
+
     tree_node *expr = get_expr(tree, lexic);
 
     if(CHECK_OP(OP_ASSIGN))
@@ -213,6 +224,8 @@ tree_node* get_math(my_tree *tree, lexic_cell **lexic)
 
 tree_node* get_num(my_tree *tree, lexic_cell **lexic)
 {
+    RECURS_ASSERT;
+
     if((**lexic).type == CELL_NUM)
     {
         tree_node *new_node;
@@ -233,6 +246,8 @@ tree_node* get_num(my_tree *tree, lexic_cell **lexic)
 
 tree_node* get_expr(my_tree *tree, lexic_cell **lexic)
 {
+    RECURS_ASSERT;
+
     tree_node* ans = get_turn(tree, lexic);
 
     tree_node* new_node;
@@ -267,6 +282,8 @@ tree_node* get_expr(my_tree *tree, lexic_cell **lexic)
 
 tree_node* get_turn(my_tree* tree, lexic_cell **lexic)
 {
+    RECURS_ASSERT;
+
     tree_node* ans = get_prim(tree, lexic);
 
     tree_node* new_node;
@@ -301,8 +318,9 @@ tree_node* get_turn(my_tree* tree, lexic_cell **lexic)
 
 tree_node* get_prim(my_tree *tree, lexic_cell **lexic)
 {
-    tree_node *ans;
+    RECURS_ASSERT;
 
+    tree_node *ans;
 
     if(CHECK_BRACKET(OPEN_ROUND))
     {
@@ -324,6 +342,8 @@ tree_node* get_prim(my_tree *tree, lexic_cell **lexic)
 
 tree_node* get_unary(my_tree *tree, lexic_cell **lexic)
 {
+    RECURS_ASSERT;
+
     tree_node* ans;
 
     tree_node *new_node;
@@ -379,6 +399,7 @@ tree_node* get_unary(my_tree *tree, lexic_cell **lexic)
 
 tree_node* get_arg(my_tree *tree, lexic_cell **lexic)
 {
+    RECURS_ASSERT;
 
     assert(CHECK_BRACKET(OPEN_ROUND));
     (*lexic)++;
@@ -393,6 +414,8 @@ tree_node* get_arg(my_tree *tree, lexic_cell **lexic)
 
 tree_node* get_var(my_tree *tree, lexic_cell **lexic)
 {
+    RECURS_ASSERT;
+
     tree_node *new_node;
     NEW_NODE;
     new_node->type = NODE_VAR;
@@ -422,6 +445,8 @@ tree_node* get_var(my_tree *tree, lexic_cell **lexic)
 
 tree_node* get_scope(my_tree *tree, lexic_cell **lexic)
 {
+    RECURS_ASSERT;
+
     assert(CHECK_BRACKET(OPEN_CURLY));
     (*lexic)++;
 
@@ -435,6 +460,8 @@ tree_node* get_scope(my_tree *tree, lexic_cell **lexic)
 
 tree_node* get_condition(my_tree *tree, lexic_cell **lexic)
 {
+    RECURS_ASSERT;
+
     assert(CHECK_BRACKET(OPEN_ROUND));
     (*lexic)++;
 
@@ -448,6 +475,8 @@ tree_node* get_condition(my_tree *tree, lexic_cell **lexic)
 
 tree_node* get_op(my_tree *tree, lexic_cell **lexic)
 {
+    RECURS_ASSERT;
+
     tree_node *new_node;
     tree_node *ans = NEW_OP_NODE(GLUE);
 

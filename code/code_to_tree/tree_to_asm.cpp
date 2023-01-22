@@ -22,14 +22,14 @@ void tree_to_asm(my_tree *tree)
           "call main\n"
           "halt\n");
 
-    print_prog(code, tree->root);
+    func_to_asm(code, tree->root);
 
     fclose(code);
 
     return;
 }
 
-void print_prog(FILE *code, tree_node *node)
+void func_to_asm(FILE *code, tree_node *node)
 {
     assert(code);
     assert(node);
@@ -57,7 +57,7 @@ void print_prog(FILE *code, tree_node *node)
 
     print_asm(code, RIGHT(func), vars, &n_vars);
 
-    if(RIGHT(node)) print_prog(code, RIGHT(node));
+    if(RIGHT(node)) func_to_asm(code, RIGHT(node));
 
     return;
 }
@@ -113,10 +113,10 @@ void print_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
                 PRINT("out\n");
                 break;
             case OP_IF:
-                print_if(code, node, vars, n_vars);
+                if_to_asm(code, node, vars, n_vars);
                 break;
             case OP_WHILE:
-                print_while(code, node, vars, n_vars);
+                while_to_asm(code, node, vars, n_vars);
                 break;
             case OP_RETURN:
                 TRY_PRINT(RIGHT(node));
@@ -238,7 +238,7 @@ ssize_t get_var_id(tree_node *node, var_info *vars, ssize_t *n_vars)
     return -1;
 }
 
-void print_if(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
+void if_to_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
 {
     assert(code);
     assert(node);
@@ -282,7 +282,7 @@ void print_if(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
     return;
 }
 
-void print_while(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
+void while_to_asm(FILE *code, tree_node *node, var_info *vars, ssize_t *n_vars)
 {
     assert(code);
     assert(node);
